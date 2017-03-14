@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>br-pager demo</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../br-pager.html">
+
+    <style is="custom-style" include="demo-pages-shared-styles">
+    </style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic br-pager demo</h3>
+      <demo-snippet>
+        <template is="dom-bind">
+          <ul>
+            <template is="dom-repeat" items="{{paginated}}">
+              <li>{{item}}</li>
+            </template>
+          </ul>
+          <br-pager
+            items='["item1","item2","item3","item4","item5","item6","item7","item8","item9","item10","item11","item12"]'
+            paginated="{{paginated}}"
+          ></br-pager>
+        </template>
+      </demo-snippet>
+      <h3>Basic br-pager demo with show-description-tooltip</h3>
+      <demo-snippet>
+        <template is="dom-bind">
+          <ul>
+            <template is="dom-repeat" items="{{paginated}}">
+              <li>{{item}}</li>
+            </template>
+          </ul>
+          <br-pager
+            items='["item1","item2","item3","item4","item5","item6","item7","item8","item9","item10","item11","item12"]' paginated="{{paginated}}" show-description-tooltip></br-pager>
+        </template>
+      </demo-snippet>
+    </div>
+  </body>
+</html>

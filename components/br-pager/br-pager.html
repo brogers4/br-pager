@@ -1,0 +1,291 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../paper-button/paper-button.html" />
+<link rel="import" href="../iron-icon/iron-icon.html" />
+<link rel="import" href="../iron-icons/iron-icons.html" />
+
+
+<!--
+`br-pager`
+A simple pagination UI element
+
+@demo demo/index.html
+-->
+
+<dom-module id="br-pager">
+  <style>
+    :host {
+      position: relative;
+      display: block;
+    }
+
+    :host .pagination-description {
+      text-align: center;
+      color: #444;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+    :host .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      @apply(--layout-horizontal);
+    }
+    :host .pagination-container .pagination-button {
+      --paper-button: {
+        background-color: var(--primary);
+        color: var(--primary-inverse);
+        font-size: 0.7em;
+        @apply(--layout-horizontal);
+        align-items: center;
+        margin: 0 10px;
+      }
+      --paper-button-disabled: {
+        background-color: var(--light-gray);
+        color: var(--med-gray);
+      }
+    }
+    :host .pagination-container .pagination-button:first-child .pagination-button-label {
+      margin-right: 10px;
+    }
+    :host .pagination-container .pagination-button:last-child .pagination-button-label {
+      margin-left: 10px;
+    }
+    :host .pagination-container .pagination-text {
+      font-size: 0.7em;
+      color: var(--dark-gray);
+    }
+
+    :host .pagination-description-popup {
+      position: absolute;
+      top: -60px;
+      font-size: 0.8em;
+      background: white;
+      color: var(--dark-gray);
+      border-radius: 50vh;
+      /*border: 1px solid var(--med-gray);*/
+      padding: 12px;
+      @apply(--shadow-elevation-4dp);
+      white-space: nowrap;
+      z-index: 100;
+      visibility: visible;
+      opacity: 1;
+      transition: all 0.2s ease-in-out;
+    }
+    :host .pagination-description-popup.hidden {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    :host .pagination-tooltip-container {
+      width: 100%;
+      box-sizing: border-box;
+      position: absolute;
+      display: flex;
+      top: -40px;
+      left: 0;
+      justify-content: center;
+      visibility: visible;
+      opacity: 1;
+      transition: all 0.2s ease-in-out;
+    }
+    :host .pagination-tooltip-container.hidden {
+      visibility: hidden;
+      opacity: 0;
+    }
+    :host .pagination-tooltip {
+      font-size: 0.7em;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border-radius: 1px;
+      padding: 10px;
+    }
+  </style>
+  <template>
+    <div id="popup" class="pagination-description-popup hidden">{{_computePaginationLongText(label,items,startIndex,endIndex)}}</div>
+    <div class="pagination-description" hidden$="{{!showDescription}}">{{_computePaginationLongText(label,items,startIndex,endIndex)}}</div>
+    <div id="pager_controls" class="pagination-container" on-mouseenter="_showDescription" on-mouseleave="_hideDescription">
+      <paper-button class="pagination-button" on-tap="_onPaginationPrev" disabled$="{{_isEqual(startIndex,0)}}">
+        <iron-icon icon="icons:chevron-left"></iron-icon>
+        <span class="pagination-button-label">Prev</span>
+      </paper-button>
+      <span class="pagination-text">{{_computePaginationShortText(items,startIndex,endIndex)}}</span>
+      <paper-button class="pagination-button" on-tap="_onPaginationNext" disabled$="{{_isEqual(endIndex,items.length)}}">
+        <span class="pagination-button-label">Next</span>
+        <iron-icon icon="icons:chevron-right"></iron-icon>
+      </paper-button>
+    </div>
+    <div id="tooltip" class="pagination-tooltip-container hidden">
+      <div class="pagination-tooltip">{{_computePaginationLongText(label,items,startIndex,endIndex)}}</div>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: 'br-pager',
+
+      properties: {
+        label: {
+          type: String,
+          value: "items"
+        },
+        items: {
+          type: Array,
+          value: function(){ return []; },
+          observer: '_observeItems'
+          // readOnly: true
+        },
+        paginated: {
+          type: Array,
+          value: function(){ return []; },
+          notify: true,
+          computed: '_getPaginatedArray(items.*,startIndex,numEntries)',
+          observer: '_observePaginated'
+        },
+        startIndex: {
+          type: Number,
+          value: 0,
+          notify: true
+        },
+        numEntries: {
+          type: Number,
+          value: 10,
+          notify: true
+        },
+        endIndex: {
+          type: Number,
+          computed: '_getPaginatedArrayEndIndex(items.*,startIndex,numEntries)',
+          notify: true
+        },
+        showDescription: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true
+        },
+        showDescriptionPopup: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true
+        },
+        showDescriptionTooltip: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true
+        },
+        paginationNeeded: {
+          type: Boolean,
+          value: false,
+          notify: true,
+          computed: '_computePaginationNeeded(items,numEntries)'
+        },
+        _popupTimeout: {
+          type: Number,
+          value: null
+        },
+        log: {
+          type: Boolean,
+          value: false
+        }
+      },
+
+      observers: [
+        // '_observeItems(items.*)'
+      ],
+
+      attached: function(){
+        this._showDescription();
+        this.async(function(){
+          this._hideDescription();
+        },10000)
+      },
+
+      _observePaginated: function(paginated){
+        if(this.log) console.log("[br-pager] _observePaginated:",paginated);
+      },
+
+      _showDescription: function(){
+        if(this.showDescriptionTooltip){
+          this.toggleClass("hidden",false,this.$.tooltip);
+        } else if(this.showDescriptionPopup){
+          this.toggleClass("hidden",false,this.$.popup);
+        }
+      },
+
+      _hideDescription: function(){
+        if(this.showDescriptionTooltip){
+          this.toggleClass("hidden",true,this.$.tooltip);
+        } else if(this.showDescriptionPopup){
+          this.toggleClass("hidden",true,this.$.popup);
+        }
+      },
+
+      _computePaginationNeeded: function(items,numEntries){
+        return (items.length > numEntries)
+      },
+
+      _computePaginationLongText: function(label,items,startIndex,endIndex){
+        if(items.length > 0){
+          return "Showing "+label+" "+this._plusOne(startIndex)+" through "+endIndex+" of "+items.length;
+        } else {
+          return "No "+label+" to show."
+        }
+      },
+
+      _computePaginationShortText: function(items,startIndex,endIndex){
+        if(items.length > 0){
+          return this._plusOne(startIndex)+"-"+endIndex+" / "+items.length;
+        } else {
+          return "0-0 / 0";
+        }
+      },
+
+      _observeItems: function(newVal,oldVal){
+        if(typeof oldVal === "undefined" || oldVal === null) return;
+        if(typeof newVal === "undefined" || newVal === null || newVal === oldVal) return;
+        if(newVal.length != oldVal.length){
+          this.set('startIndex',0);
+        }
+        if(this.log) console.log("[br-pager] _observeItems:",newVal);
+      },
+
+      _onPaginationNext: function(e){
+        var newStartIndex = Math.min(this.startIndex + this.numEntries,this.items.length - 1);
+        this.set('startIndex',newStartIndex);
+      },
+
+      _onPaginationPrev: function(e){
+        var newStartIndex = Math.max(this.startIndex - this.numEntries,0);
+        this.set('startIndex',newStartIndex);
+      },
+
+      _getPaginatedArrayEndIndex: function(arrChange,startIndex,numEntries){
+        var arr = this._getChangeBase(arrChange);
+        return Math.min(arr.length,startIndex+numEntries);
+      },
+
+      _getPaginatedArray: function(arrChange,startIndex,numEntries){
+        var arr = this._getChangeBase(arrChange);
+        var endIndex = Math.min(arr.length,startIndex+numEntries);
+        return arr.slice(startIndex,endIndex);
+      },
+
+      _getChangeBase: function(change){
+        if(change && (typeof change.base !== "undefined") && change.path){
+          return change.base;
+        }
+        return change;
+      },
+
+      _plusOne: function(num){
+        return num+1;
+      },
+
+      _isEqual: function(a,b){
+        if(typeof a !== typeof b) return false;
+        if(typeof a === 'string') {
+          return (a.toLowerCase() === b.toLowerCase());
+        }
+        return (a === b);
+      }
+    })
+  </script>
+</dom-module>

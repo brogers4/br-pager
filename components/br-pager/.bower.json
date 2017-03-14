@@ -1,0 +1,25 @@
+{
+  "name": "br-pager",
+  "description": "A simple pagination UI element",
+  "main": "br-pager.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.4.0"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
+    "web-component-tester": "^4.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "homepage": "https://github.com/brogers4/br-pager",
+  "_release": "5aa2a01c1f",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "5aa2a01c1fe163ec139fd699467fce5d6e8f89eb"
+  },
+  "_source": "https://github.com/brogers4/br-pager.git",
+  "_target": "master",
+  "_originalSource": "brogers4/br-pager",
+  "_direct": true
+}
